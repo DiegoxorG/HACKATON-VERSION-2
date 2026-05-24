@@ -6,10 +6,9 @@ const links = [
   { to: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
   { to: '/expenses', label: 'Mis Gastos', icon: Receipt },
   { to: '/advisor', label: 'Asesor IA', icon: Bot },
-  { to: '/credits', label: 'Creditos', icon: BarChart3 },
+  { to: '/credits', label: 'Créditos', icon: BarChart3 },
   { to: '/products', label: 'Productos', icon: Package },
   { to: '/reports', label: 'Reportes', icon: FileText },
-  { to: '/score', label: 'Mi Score ML', icon: TrendingUp },
   { to: '/profile', label: 'Perfil', icon: User }
 ]
 

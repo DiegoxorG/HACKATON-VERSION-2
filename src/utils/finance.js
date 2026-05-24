@@ -24,12 +24,12 @@ export const getScoreLabel = (score) => {
 }
 
 export const buildClientSummary = (user) => `
-Nombre: ${user.name}, Edad: ${user.age}, Ciudad: ${user.city}, Ocupacion: ${user.occupation}
+Nombre: ${user.name}, Edad: ${user.age}, Ciudad: ${user.city}, Ocupación: ${user.occupation}
 Ingreso mensual: ${formatCOP(user.income)}
 Gastos fijos: ${formatCOP(user.fixedExpenses)}
 Gastos variables: ${formatCOP(user.variableExpenses)}
 Ahorro mensual: ${formatCOP((user.income || 0) - (user.fixedExpenses || 0) - (user.variableExpenses || 0))}
-Creditos activos: ${user.credits}
+Créditos activos: ${user.credits}
 Metas: ${user.goals?.join(', ')}
 Puntaje de salud financiera: ${calculateScore(user)}/100
 `.trim()
@@ -40,4 +40,3 @@ export const monthlyPayment = (amount, monthlyRatePercent, months) => {
   if (!rate) return amount / months
   return (amount * rate) / (1 - Math.pow(1 + rate, -months))
 }
-
