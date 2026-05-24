@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 import anthropic
 import os
@@ -27,6 +27,23 @@ class ClaudeRequest(BaseModel):
     systemPrompt: Optional[str] = "Eres FinConfia, un asistente financiero."
     userMessage: str
     history: Optional[List[Message]] = []
+
+class ScoreRequest(BaseModel):
+    age: int = Field(ge=0, default=18)
+    income: int = Field(ge=0, default=0)
+    fixedExpenses: int = Field(ge=0, default=0)
+    variableExpenses: int = Field(ge=0, default=0)
+    credits: int = Field(ge=0, default=0)
+
+
+@app.post("/score/calculate")
+def score_calculate(payload: ScoreRequest):
+    try:
+        from credit_scorer import predict_credit_probability
+        return predict_credit_probability(payload.model_dump())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/health")
 def health():

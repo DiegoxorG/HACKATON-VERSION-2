@@ -9,6 +9,7 @@ import AIAdvisor from './screens/AIAdvisor'
 import CreditAnalyzer from './screens/CreditAnalyzer'
 import BankReport from './screens/BankReport'
 import Profile from './screens/Profile'
+import Score from './screens/Score'
 
 const Protected = ({ children }) => {
   const { user } = useApp()
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/credits" element={<Protected><CreditAnalyzer /></Protected>} />
           <Route path="/reports" element={<Protected><BankReport /></Protected>} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
+          <Route path="/score" element={<Protected><Score /></Protected>} />
         </Routes>
       </BrowserRouter>
     </AppProvider>
