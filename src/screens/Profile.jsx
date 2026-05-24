@@ -1,11 +1,20 @@
-﻿import { Bell, Calendar, DollarSign, Mail, Pencil, Target, X } from 'lucide-react'
-import { useState } from 'react'
+﻿import { AlertCircle, Brain, Calendar, Check, CheckSquare, Clock, Target, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppShell from '../components/AppShell'
 import { useApp } from '../context/AppContext'
 import { askClaude } from '../services/claudeService'
 import { updateProfile } from '../services/authService'
+import { deleteMemory, getPendingMemories, resolveMemory } from '../services/memoryService'
 import { calculateScore, formatCOP, getScoreLabel } from '../utils/finance'
+
+const typeMeta = {
+  pendiente: { icon: Clock, color: 'text-yellow-600' },
+  meta: { icon: Target, color: 'text-blue-600' },
+  problema: { icon: AlertCircle, color: 'text-red-600' },
+  compromiso: { icon: CheckSquare, color: 'text-green-600' },
+  evento: { icon: Calendar, color: 'text-violet-600' }
+}
 
 export default function Profile() {
   const { user, setUser, logout } = useApp()
@@ -16,8 +25,11 @@ export default function Profile() {
   const [goalMonths, setGoalMonths] = useState(12)
   const [plan, setPlan] = useState('')
   const [loadingPlan, setLoadingPlan] = useState(false)
+  const [memoryTick, setMemoryTick] = useState(0)
   const score = calculateScore(user)
   const label = getScoreLabel(score)
+  const memories = useMemo(() => getPendingMemories(user?.id || 0), [user?.id, memoryTick])
+
   const editFields = [
     { key: 'name', label: 'Nombre completo', placeholder: 'Ej: Ana Maria Perez', type: 'text' },
     { key: 'estadoCivil', label: 'Estado civil', placeholder: 'Ej: Soltero/a', type: 'text' },
@@ -50,6 +62,8 @@ export default function Profile() {
     }
   }
 
+  const ageDays = (iso) => Math.floor((new Date() - new Date(iso)) / (1000 * 60 * 60 * 24))
+
   return <AppShell>
     <div className="grid lg:grid-cols-3 gap-4">
       <div>
@@ -58,11 +72,20 @@ export default function Profile() {
       </div>
       <div className="lg:col-span-2 space-y-4">
         <div className="bg-white rounded-2xl p-6"><div className="flex justify-between"><h3 className="font-sora">Mi informacion</h3><button onClick={() => setEdit((e) => !e)} className="text-[#F5A623]">Editar</button></div>{edit ? <div className="grid md:grid-cols-2 gap-3 mt-4">{editFields.map((field) => <div key={field.key}><label className="text-sm text-slate-600">{field.label}</label><input className="bg-[#EEF4FF] p-3 rounded-xl w-full mt-1" type={field.type} min={field.type === 'number' ? 0 : undefined} placeholder={field.placeholder} value={draft[field.key] || ''} onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })} /></div>)}<div className="col-span-2 flex gap-3"><button onClick={save} className="bg-[#F5A623] text-[#1B3A6B] rounded-xl px-4 py-2">Guardar</button><button onClick={() => { setDraft(user); setEdit(false) }} className="border-2 border-[#1B3A6B] text-[#1B3A6B] rounded-xl px-4 py-2">Cancelar</button></div></div> : <div className="mt-4 space-y-2"> <p><strong>Tipo y numero de documento:</strong> {user?.tipoDocumento || 'No registrado'} {user?.numeroDocumento || ''}</p><p><strong>Estado civil:</strong> {user?.estadoCivil || 'No registrado'}</p><p><strong>Correo:</strong> {user?.email}</p><p><strong>Ingreso:</strong> {formatCOP(user?.income)}</p><p><strong>Gastos fijos:</strong> {formatCOP(user?.fixedExpenses)}</p><p><strong>Gastos variables:</strong> {formatCOP(user?.variableExpenses)}</p><p><strong>Creditos:</strong> {user?.credits}</p></div>}</div>
+
+        <div className="bg-white rounded-2xl p-6">
+          <div className="flex items-center justify-between"><h3 className="font-sora inline-flex items-center gap-2"><Brain className="text-[#F5A623]" size={18} />Lo que recuerdo de ti</h3><span className="text-xs text-slate-400">Solo tu puedes ver esto</span></div>
+          {memories.length === 0 ? <p className="text-slate-500 text-sm mt-3">Aun no tengo nada guardado. Cuentame mas en el chat.</p> : <div className="mt-3 space-y-2">{memories.map((m) => {
+            const meta = typeMeta[m.type] || typeMeta.pendiente
+            const Icon = meta.icon
+            return <div key={m.id} className="flex items-center gap-3 border-b pb-2"><Icon size={15} className={meta.color} /><div className="flex-1"><p className="text-sm text-[#1B3A6B] font-medium">{m.text}</p><p className="text-xs text-slate-400">Hace {ageDays(m.createdAt)} dias</p></div><button onClick={() => { resolveMemory(user.id, m.id); setMemoryTick((n) => n + 1) }} className="text-green-600"><Check size={16} /></button><button onClick={() => { deleteMemory(user.id, m.id); setMemoryTick((n) => n + 1) }} className="text-slate-400"><Trash2 size={14} /></button></div>
+          })}</div>}
+          <p className="text-xs text-slate-400 italic mt-3">Todas las memorias resueltas se eliminan automaticamente despues de 30 dias</p>
+        </div>
+
         <div className="bg-white rounded-2xl p-6"><h3 className="font-sora mb-3">Metas</h3><div className="flex flex-wrap gap-2">{(user?.goals || []).map((g) => <span key={g} className="px-3 py-1 rounded-full bg-[#FFF8E7] border border-[#F5A623]">{g}</span>)}</div></div>
         <button onClick={() => { logout(); navigate('/') }} className="w-full border-2 border-red-500 text-red-600 rounded-xl py-3">Cerrar sesion</button>
       </div>
     </div>
   </AppShell>
 }
-
-
