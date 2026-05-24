@@ -19,7 +19,23 @@ export default function Register() {
   const [step, setStep] = useState(1)
   const navigate = useNavigate()
   const { setUser } = useApp()
-  const [form, setForm] = useState({ name: '', age: '', city: 'Barranquilla', occupation: 'Empleado/a', email: '', password: '', confirmPassword: '', income: 0, fixedExpenses: 0, variableExpenses: 0, credits: 0, goals: [] })
+  const [form, setForm] = useState({
+    name: '',
+    age: '',
+    city: 'Barranquilla',
+    occupation: 'Empleado/a',
+    estadoCivil: 'Soltero/a',
+    tipoDocumento: 'CC',
+    numeroDocumento: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    income: 0,
+    fixedExpenses: 0,
+    variableExpenses: 0,
+    credits: 0,
+    goals: []
+  })
   const [error, setError] = useState('')
   const savings = useMemo(() => Number(form.income || 0) - Number(form.fixedExpenses || 0) - Number(form.variableExpenses || 0), [form])
 
@@ -27,7 +43,7 @@ export default function Register() {
 
   const next = () => {
     setError('')
-    if (step === 1 && (!form.name || !form.age || !form.email || !form.password || form.password !== form.confirmPassword)) return setError('Completa tus datos y verifica la contrasena')
+    if (step === 1 && (!form.name || !form.age || !form.numeroDocumento || !form.email || !form.password || form.password !== form.confirmPassword)) return setError('Completa tus datos y verifica la contrasena')
     if (step === 3 && form.goals.length === 0) return setError('Selecciona al menos una meta')
     if (step < 3) setStep(step + 1)
   }
@@ -57,6 +73,29 @@ export default function Register() {
         <div>
           <label className="text-sm text-slate-600">Ciudad de residencia</label>
           <input className="w-full bg-[#EEF4FF] p-3 rounded-xl mt-1" placeholder="Ej: Barranquilla" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+        </div>
+        <div>
+          <label className="text-sm text-slate-600">Estado civil</label>
+          <select className="w-full bg-[#EEF4FF] p-3 rounded-xl mt-1" value={form.estadoCivil} onChange={(e) => setForm({ ...form, estadoCivil: e.target.value })}>
+            <option>Soltero/a</option>
+            <option>Casado/a</option>
+            <option>Union libre</option>
+            <option>Divorciado/a</option>
+            <option>Viudo/a</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-sm text-slate-600">Tipo de documento</label>
+          <select className="w-full bg-[#EEF4FF] p-3 rounded-xl mt-1" value={form.tipoDocumento} onChange={(e) => setForm({ ...form, tipoDocumento: e.target.value })}>
+            <option>CC</option>
+            <option>CE</option>
+            <option>TI</option>
+            <option>Pasaporte</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-sm text-slate-600">Numero de identificacion</label>
+          <input className="w-full bg-[#EEF4FF] p-3 rounded-xl mt-1" placeholder="Ej: 1122334455" value={form.numeroDocumento} onChange={(e) => setForm({ ...form, numeroDocumento: e.target.value })} />
         </div>
         <div>
           <label className="text-sm text-slate-600">Correo electronico</label>
