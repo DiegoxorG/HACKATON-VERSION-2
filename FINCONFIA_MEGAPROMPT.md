@@ -459,7 +459,12 @@ Step indicator (3 circles connected by lines, horizontal):
 ── STEP 1: "Cuéntanos sobre ti" ──
   Fields with icon left inside input:
     <User/> Nombre completo
-    <Calendar/> Edad (number)
+    <Hash/> Número de Identificación (text, inputMode="numeric", pattern="[0-9]*")
+      - Validation: 6-12 digits. Error: "Ingresa un número de identificación válido (6-12 dígitos)"
+      - Logic: Block non-numeric keys onKeyDown and strip non-numeric onPaste.
+    <Calendar/> Edad (number, min="18", max="100")
+      - Validation: if < 18 or > 100, show red error "Debes ser mayor de 18 años para usar FinConfia"
+      - Prevent Step 2 if age is invalid.
     <MapPin/> Ciudad (pre-filled "Barranquilla")
     <Briefcase/> Ocupación → select:
       ["Empleado/a", "Independiente", "Empresario/a",
@@ -960,9 +965,16 @@ RIGHT COLUMN:
     
     View mode: each field as row (border-b):
       Icon gray + label gray tiny uppercase + value DM Sans #1B3A6B
+      - "Nombre"
+      - "Edad": value + " años"
+      - "Identificación": format with dots (e.g., 1.122.334.455)
+      - "Estado Civil"
+      - "Ocupación"
     
     Edit mode (toggle on Editar click):
       All fields become inputs
+      - Edad: type="number", min="18", max="100" with inline validation.
+      - Identificación: block non-numeric, 6-12 digits limit.
       Save button gold + Cancel outline
       On save: updateProfile() + setUser() + show success toast
 
