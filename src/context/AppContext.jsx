@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+﻿import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { getSession, logout as authLogout } from '../services/authService'
 
 const AppContext = createContext(null)
@@ -25,3 +25,5 @@ export const useApp = () => {
   if (!ctx) throw new Error('useApp debe usarse dentro de AppProvider')
   return ctx
 }
+
+

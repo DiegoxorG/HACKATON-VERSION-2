@@ -1,4 +1,4 @@
-export const formatCOP = (n) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n || 0)
+﻿export const formatCOP = (n) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n || 0)
 
 export const calculateScore = (user) => {
   if (!user) return 0
@@ -40,3 +40,4 @@ export const monthlyPayment = (amount, monthlyRatePercent, months) => {
   if (!rate) return amount / months
   return (amount * rate) / (1 - Math.pow(1 + rate, -months))
 }
+

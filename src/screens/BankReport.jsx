@@ -1,4 +1,4 @@
-import { CheckCircle, Loader2 } from 'lucide-react'
+﻿import { CheckCircle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import AppShell from '../components/AppShell'
 import Logo from '../components/Logo'
@@ -60,3 +60,5 @@ export default function BankReport() {
       </div>}
   </AppShell>
 }
+
+

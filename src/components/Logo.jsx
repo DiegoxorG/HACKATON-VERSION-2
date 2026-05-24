@@ -1,4 +1,4 @@
-export default function Logo({ size = 'md', light = false }) {
+﻿export default function Logo({ size = 'md', light = false }) {
   const sizes = { sm: 'text-xl', md: 'text-3xl', lg: 'text-5xl' }
   const color = light ? 'text-white' : 'text-[#1B3A6B]'
   const dotSize = size === 'lg' ? 10 : size === 'md' ? 8 : 6
@@ -21,3 +21,5 @@ export default function Logo({ size = 'md', light = false }) {
     </span>
   )
 }
+
+

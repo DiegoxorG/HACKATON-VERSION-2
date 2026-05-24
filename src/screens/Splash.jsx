@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+﻿import { useNavigate } from 'react-router-dom'
 import Logo from '../components/Logo'
 import { mockUser } from '../data/mockUser'
 import { useApp } from '../context/AppContext'
@@ -33,3 +33,4 @@ export default function Splash() {
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-import { CheckCircle, Shield, TrendingUp } from 'lucide-react'
+﻿import { CheckCircle, Shield, TrendingUp } from 'lucide-react'
 import Logo from './Logo'
 
 export default function AuthLayout({ children, title, subtitle }) {
@@ -32,3 +32,5 @@ export default function AuthLayout({ children, title, subtitle }) {
     </div>
   )
 }
+
+

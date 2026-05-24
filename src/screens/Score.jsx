@@ -1,4 +1,4 @@
-import { TrendingUp } from 'lucide-react'
+﻿import { TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 import AppShell from '../components/AppShell'
 import { useApp } from '../context/AppContext'
@@ -66,7 +66,7 @@ export default function Score() {
   return (
     <AppShell>
       <h1 className="font-sora text-3xl text-[#1B3A6B]">Mi Score ML</h1>
-      <p className="text-slate-500 mb-6">Modelo XGBoost — ajusta tus datos y calcula tu probabilidad de credito</p>
+      <p className="text-slate-500 mb-6">Modelo XGBoost a€” ajusta tus datos y calcula tu probabilidad de credito</p>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Editable form */}
@@ -116,7 +116,7 @@ export default function Score() {
           <div>
             <label className="text-sm text-slate-500 block mb-1">Creditos activos</label>
             <div className="flex items-center gap-3">
-              <button onClick={() => set('credits', Math.max(0, form.credits - 1))} className="w-9 h-9 rounded-full border border-slate-200 text-lg font-bold hover:bg-slate-50">−</button>
+              <button onClick={() => set('credits', Math.max(0, form.credits - 1))} className="w-9 h-9 rounded-full border border-slate-200 text-lg font-bold hover:bg-slate-50">aˆ’</button>
               <span className="font-sora text-xl w-6 text-center">{form.credits}</span>
               <button onClick={() => set('credits', form.credits + 1)} className="w-9 h-9 rounded-full border border-slate-200 text-lg font-bold hover:bg-slate-50">+</button>
             </div>
@@ -206,3 +206,4 @@ export default function Score() {
     </AppShell>
   )
 }
+

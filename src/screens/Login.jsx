@@ -1,4 +1,4 @@
-import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
+﻿import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
@@ -54,3 +54,5 @@ export default function Login() {
     </AuthLayout>
   )
 }
+
+

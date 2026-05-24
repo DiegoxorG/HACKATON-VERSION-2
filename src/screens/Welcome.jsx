@@ -1,4 +1,4 @@
-import { CheckCircle } from 'lucide-react'
+﻿import { CheckCircle } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
@@ -31,3 +31,4 @@ export default function Welcome() {
     </div>
   )
 }
+

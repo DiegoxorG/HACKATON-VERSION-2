@@ -1,4 +1,4 @@
-import { Bell, Calendar, DollarSign, Mail, Pencil, Target, X } from 'lucide-react'
+﻿import { Bell, Calendar, DollarSign, Mail, Pencil, Target, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppShell from '../components/AppShell'
@@ -64,3 +64,5 @@ export default function Profile() {
     </div>
   </AppShell>
 }
+
+

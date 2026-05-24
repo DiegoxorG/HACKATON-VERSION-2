@@ -1,4 +1,4 @@
-import { Briefcase, Calendar, Check, CheckCircle, CreditCard, DollarSign, GraduationCap, Home, Lock, Mail, MapPin, Receipt, Shield, ShoppingCart, Star, TrendingUp, User } from 'lucide-react'
+﻿import { Briefcase, Calendar, Check, CheckCircle, CreditCard, DollarSign, GraduationCap, Home, Lock, Mail, MapPin, Receipt, Shield, ShoppingCart, Star, TrendingUp, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
@@ -146,3 +146,5 @@ export default function Register() {
     </AuthLayout>
   )
 }
+
+

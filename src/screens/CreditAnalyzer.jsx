@@ -1,4 +1,4 @@
-import { AlertTriangle, Calculator, CheckCircle, Lightbulb, Loader2, RefreshCw, XCircle } from 'lucide-react'
+﻿import { AlertTriangle, Calculator, CheckCircle, Lightbulb, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import AppShell from '../components/AppShell'
 import { useApp } from '../context/AppContext'
@@ -70,3 +70,5 @@ export default function CreditAnalyzer() {
     </div>}
   </AppShell>
 }
+
+

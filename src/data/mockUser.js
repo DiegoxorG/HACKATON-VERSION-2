@@ -1,4 +1,4 @@
-export const mockUser = {
+﻿export const mockUser = {
   id: 9999,
   name: 'Carlos Martinez',
   age: 34,
@@ -16,3 +16,5 @@ export const mockUser = {
   goals: ['Pagar mis deudas', 'Crear un fondo de emergencia'],
   createdAt: new Date().toISOString()
 }
+
+

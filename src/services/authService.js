@@ -1,4 +1,4 @@
-const USERS_KEY = 'finconfia_users'
+﻿const USERS_KEY = 'finconfia_users'
 const SESSION_KEY = 'finconfia_session'
 
 export const register = (userData) => {
@@ -33,3 +33,4 @@ export const updateProfile = (updatedData) => {
   }
   return updatedData
 }
+

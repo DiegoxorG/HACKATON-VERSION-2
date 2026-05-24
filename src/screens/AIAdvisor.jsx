@@ -1,13 +1,24 @@
-import { Loader2, MessageSquare, MoreVertical, Send } from 'lucide-react'
+﻿import { Loader2, MessageSquare, MoreVertical, Send } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import AppShell from '../components/AppShell'
+import ProductCard from '../components/ProductCard'
 import { useApp } from '../context/AppContext'
 import { serfinanzaKnowledge } from '../data/serfinanzaKnowledge'
+import { serfinanzaProducts } from '../data/serfinanzaProducts'
 import { askClaude } from '../services/claudeService'
 import { buildClientSummary } from '../utils/finance'
+import { getProductRecommendationPrompt } from '../utils/productRecommender'
 
 const KEY = 'finconfia_chat_history'
 const chips = ['Puedo pagar mis deudas mas rapido?', 'Cuanto debo ahorrar al mes?', 'Conviene sacar un credito ahora?', 'Como mejoro mi historial crediticio?']
+
+const parseAIResponse = (text) => {
+  const match = text.match(/\[RECOMENDAR_PRODUCTO:([^\]]+)\]/)
+  const cleanText = text.replace(/\[RECOMENDAR_PRODUCTO:[^\]]+\]/g, '').trim()
+  const productId = match ? match[1] : null
+  const product = productId ? serfinanzaProducts.find((p) => p.id === productId) : null
+  return { cleanText, product }
+}
 
 export default function AIAdvisor() {
   const { user } = useApp()
@@ -15,7 +26,10 @@ export default function AIAdvisor() {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const [sessions, setSessions] = useState(JSON.parse(localStorage.getItem(KEY) || '[]'))
-  const systemPrompt = useMemo(() => `Eres FinConfia, un asesor financiero empatetico experto en finanzas personales colombianas. Hablas en espanol colombiano y terminas con una pregunta de seguimiento.
+
+  const systemPrompt = useMemo(() => {
+    const recommendationPrompt = getProductRecommendationPrompt(user)
+    return `Eres FinConfia, un asesor financiero empatetico experto en finanzas personales colombianas. Hablas en espanol colombiano y terminas con una pregunta de seguimiento.
 
 Perfil del cliente:
 ${buildClientSummary(user)}
@@ -25,9 +39,11 @@ ${serfinanzaKnowledge}
 
 Cuando el cliente pregunte sobre productos, procesos o canales de Serfinanza,
 usa SIEMPRE esta base de conocimiento para dar respuestas precisas y actualizadas.
-Si la pregunta es sobre un producto específico, menciona tasas, requisitos y 
+Si la pregunta es sobre un producto especifico, menciona tasas, requisitos y 
 canales concretos. Si no sabes algo, di que puede contactar al 01 8000 123 456.
-`, [user])
+
+${recommendationPrompt}`
+  }, [user])
 
   useEffect(() => {
     if (!user) return
@@ -51,7 +67,8 @@ canales concretos. Si no sabes algo, di que puede contactar al 01 8000 123 456.
     setLoading(true)
     try {
       const reply = await askClaude(systemPrompt, text, next.map((m) => ({ role: m.role, content: m.content })))
-      const withAi = [...next, { role: 'assistant', content: reply, ts: new Date().toISOString() }]
+      const parsed = parseAIResponse(reply)
+      const withAi = [...next, { role: 'assistant', content: parsed.cleanText, product: parsed.product || null, ts: new Date().toISOString() }]
       setMessages(withAi)
       persistSession(withAi)
     } catch (err) {
@@ -66,7 +83,21 @@ canales concretos. Si no sabes algo, di que puede contactar al 01 8000 123 456.
     <div className="grid lg:grid-cols-[1fr_288px] gap-4 h-[calc(100vh-120px)]">
       <section className="bg-white rounded-2xl overflow-hidden flex flex-col">
         <div className="p-4 border-b flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-[#1B3A6B] text-white grid place-items-center font-sora">FC</div><div><p className="font-sora">FinConfia</p><p className="text-xs text-green-600">En linea</p></div></div><MoreVertical size={18} /></div>
-        <div className="flex-1 p-4 bg-slate-100 overflow-y-auto space-y-3">{messages.map((m, i) => <div key={i} className={`max-w-[75%] ${m.role === 'user' ? 'ml-auto' : ''}`}><div className={`${m.role === 'user' ? 'bg-[#1B3A6B] text-white rounded-2xl rounded-tr-none' : `bg-white text-[#1B3A6B] rounded-2xl rounded-tl-none border-l-4 ${m.error ? 'border-red-400' : 'border-[#F5A623]'}`} px-4 py-3`}>{m.content}</div></div>)}{loading && <div className="bg-white rounded-2xl border-l-4 border-[#F5A623] px-4 py-3 inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#F5A623] dot-1" /><span className="w-2 h-2 rounded-full bg-[#F5A623] dot-2" /><span className="w-2 h-2 rounded-full bg-[#F5A623] dot-3" /></div>}</div>
+        <div className="flex-1 p-4 bg-slate-100 overflow-y-auto space-y-3">
+          {messages.map((m, i) => (
+            <div key={i} className={`max-w-[75%] ${m.role === 'user' ? 'ml-auto' : ''}`}>
+              <div className={`${m.role === 'user' ? 'bg-[#1B3A6B] text-white rounded-2xl rounded-tr-none' : `bg-white text-[#1B3A6B] rounded-2xl rounded-tl-none border-l-4 ${m.error ? 'border-red-400' : 'border-[#F5A623]'}`} px-4 py-3`}>
+                <p>{m.content}</p>
+                {m.role === 'assistant' && m.product && (
+                  <div className="mt-3 animate-fadeInUp">
+                    <ProductCard product={m.product} compact />
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {loading && <div className="bg-white rounded-2xl border-l-4 border-[#F5A623] px-4 py-3 inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#F5A623] dot-1" /><span className="w-2 h-2 rounded-full bg-[#F5A623] dot-2" /><span className="w-2 h-2 rounded-full bg-[#F5A623] dot-3" /></div>}
+        </div>
         <div className="p-3 bg-white border-t overflow-x-auto hide-scrollbar"><div className="flex gap-2">{chips.map((c) => <button key={c} onClick={() => sendMessage(c)} className="whitespace-nowrap border border-[#F5A623] rounded-full px-4 py-2 text-sm">{c}</button>)}</div></div>
         <div className="p-4 border-t bg-white flex gap-2"><input className="flex-1 bg-[#EEF4FF] rounded-full px-4 py-3" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && sendMessage()} placeholder="Escribele a FinConfia..." /><button onClick={() => sendMessage()} className="w-12 h-12 rounded-full bg-[#F5A623] text-[#1B3A6B] grid place-items-center"><Send size={18} /></button></div>
       </section>
@@ -74,3 +105,5 @@ canales concretos. Si no sabes algo, di que puede contactar al 01 8000 123 456.
     </div>
   </AppShell>
 }
+
+
