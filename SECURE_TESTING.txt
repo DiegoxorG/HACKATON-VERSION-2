@@ -1,0 +1,308 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║   🔐 FORMA MAS SEGURA DE CORRER Y PROBAR TU PROYECTO               ║
+║                                                                      ║
+║   FinIA Admin MVP — Guía de Testing y Seguridad                    ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════
+
+⚡ COMIENZA AQUI (3 min)
+
+  1. Abrir Terminal/PowerShell
+  
+  2. Ir a proyecto:
+     cd c:\Users\User\Desktop\HACKATON-VERSION-2
+  
+  3. Instalar (primera vez):
+     npm install
+  
+  4. Ejecutar:
+     npm run dev
+  
+  5. Abrir navegador:
+     http://localhost:5173/admin/login
+  
+  6. Ingresar:
+     Email:    admin@serfinanza.com
+     Password: admin123
+
+═══════════════════════════════════════════════════════════════════════
+
+📋 PASO A PASO SEGURO (10 min)
+
+┌───────────────────────────────────────────────────────────────────┐
+│                                                                   │
+│ PASO 1: VERIFICAR ENVIRONMENT                                    │
+│ ──────────────────────────────────────────────────────────────   │
+│ node --version    → Debe ser 18+                                 │
+│ npm --version     → Debe ser 9+                                  │
+│                                                                   │
+│ Si no tienes: https://nodejs.org/                                │
+│                                                                   │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ PASO 2: LIMPIAR CACHE                                            │
+│ ──────────────────────────────────────────────────────────────   │
+│ npm cache clean --force                                          │
+│                                                                   │
+│ Esto elimina cache viejo (seguridad)                             │
+│                                                                   │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ PASO 3: CAMBIAR A PROYECTO                                       │
+│ ──────────────────────────────────────────────────────────────   │
+│ cd c:\Users\User\Desktop\HACKATON-VERSION-2                     │
+│                                                                   │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ PASO 4: INSTALAR DEPENDENCIAS                                    │
+│ ──────────────────────────────────────────────────────────────   │
+│ npm install                                                      │
+│                                                                   │
+│ Esperar hasta que termine sin errores                            │
+│ Debe crear carpeta node_modules                                  │
+│                                                                   │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ PASO 5: AUDITAR SEGURIDAD                                        │
+│ ──────────────────────────────────────────────────────────────   │
+│ npm audit                                                        │
+│                                                                   │
+│ Si hay vulnerabilidades:                                         │
+│ npm audit fix                                                    │
+│                                                                   │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ PASO 6: EJECUTAR EN DESARROLLO                                   │
+│ ──────────────────────────────────────────────────────────────   │
+│ npm run dev                                                      │
+│                                                                   │
+│ Espera este mensaje:                                             │
+│ "VITE v5.4.21 ready in XXX ms"                                   │
+│ "Local: http://localhost:5173/"                                  │
+│                                                                   │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ PASO 7: ACCEDER DESDE NAVEGADOR                                  │
+│ ──────────────────────────────────────────────────────────────   │
+│ http://localhost:5173/admin/login                                │
+│                                                                   │
+│ Email:    admin@serfinanza.com                                   │
+│ Password: admin123                                               │
+│                                                                   │
+│ Debe cargar Dashboard con 4 KPIs                                 │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════
+
+🔍 3 FORMAS DE EJECUTAR
+
+┌─ FORMA 1: DESARROLLO ────────────────────────────────────────────┐
+│                                                                  │
+│ npm run dev                                                      │
+│                                                                  │
+│ PROS:                        CONS:                              │
+│ ✅ Hot reload (cambios auto) ❌ Solo localhost                  │
+│ ✅ Debug completo             ❌ No es como producción          │
+│ ✅ Rápido (1-2 segundos)     │                                  │
+│ ✅ RECOMENDADO               │                                  │
+│                                                                  │
+│ CUANDO USAR: Development, testing, debugging                   │
+│                                                                  │
+├─ FORMA 2: BUILD + PREVIEW ──────────────────────────────────────┤
+│                                                                  │
+│ npm run build        # Genera dist/                             │
+│ npm run preview      # Prueba build                             │
+│                                                                  │
+│ PROS:                        CONS:                              │
+│ ✅ Simula producción exacta   ❌ Sin hot reload                 │
+│ ✅ Máxima seguridad           ❌ Build tarda 7-10s              │
+│ ✅ Archivos optimizados       │                                  │
+│ ✅ MÁS SEGURO                 │                                  │
+│                                                                  │
+│ CUANDO USAR: Validación final antes de deploy                  │
+│                                                                  │
+├─ FORMA 3: VALIDAR BUILD ────────────────────────────────────────┤
+│                                                                  │
+│ npm run build                                                    │
+│                                                                  │
+│ PROS:                        CONS:                              │
+│ ✅ Solo verifica que compila ❌ No ejecuta servidor             │
+│ ✅ Rápido detectar errores    ❌ No pruebas funcionales         │
+│                                                                  │
+│ CUANDO USAR: Quick check antes de subir                        │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════
+
+✅ VERIFICACIÓN DE SEGURIDAD
+
+┌─ VERIFICAR NO HAY ERRORES ───────────────────────────────────────┐
+│                                                                  │
+│ 1. F12 (abre Developer Tools)                                   │
+│ 2. Tab: Console                                                  │
+│ 3. Busca errores en ROJO                                        │
+│                                                                  │
+│ ✅ OK si:    No hay rojo                                        │
+│ ⚠️  OK si:   Hay warnings amarillos (info)                      │
+│ ❌ ERROR si: Hay errores rojos                                  │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ VERIFICAR DATOS LOCALES ────────────────────────────────────────┐
+│                                                                  │
+│ 1. F12                                                           │
+│ 2. Tab: Application (o Storage)                                 │
+│ 3. Izquierda: Local Storage                                     │
+│ 4. Click tu sitio                                               │
+│                                                                  │
+│ Debes ver:                                                       │
+│ ✅ finia_admin_session         (tu sesión)                      │
+│ ✅ finia_notes_CLI-001         (notas guardadas)                │
+│                                                                  │
+│ Esto confirma:                                                   │
+│ ✅ Datos se guardan LOCALMENTE (no servidor)                   │
+│ ✅ SEGURO (solo tu navegador)                                   │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ VERIFICAR NETWORK OK ───────────────────────────────────────────┐
+│                                                                  │
+│ 1. F12                                                           │
+│ 2. Tab: Network                                                  │
+│ 3. Recarga página (Ctrl+R)                                      │
+│ 4. Busca archivos                                                │
+│                                                                  │
+│ Debe haber:                                                      │
+│ ✅ index.html         (status 200)                              │
+│ ✅ index-XXXXX.js     (status 200)                              │
+│ ✅ index-XXXXX.css    (status 200)                              │
+│                                                                  │
+│ NO debe haber:                                                   │
+│ ❌ Errores 404 (rojo)                                           │
+│ ❌ Requests a servidores externos                               │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════
+
+🐛 TROUBLESHOOTING RÁPIDO
+
+┌─ PUERTO YA ESTÁ EN USO ──────────────────────────────────────────┐
+│ Error: "EADDRINUSE: address already in use :::5173"             │
+│                                                                  │
+│ Solución 1 (cambiar puerto):                                    │
+│ npm run dev -- --port 5174                                      │
+│                                                                  │
+│ Solución 2 (matar proceso):                                     │
+│ netstat -ano | findstr :5173                                    │
+│ taskkill /PID XXXXX /F                                          │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ MODULE NOT FOUND ───────────────────────────────────────────────┐
+│ Error: "Cannot find module 'react'"                             │
+│                                                                  │
+│ Solución:                                                        │
+│ npm cache clean --force                                         │
+│ rm -r node_modules package-lock.json                            │
+│ npm install                                                     │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ DATOS NO SE GUARDAN ────────────────────────────────────────────┐
+│ Las notas desaparecen al recargar                               │
+│                                                                  │
+│ Posibles causas:                                                 │
+│ 1. Modo incógnito: cambiar a ventana normal                     │
+│ 2. localStorage deshabilitado: Check F12 > Application          │
+│ 3. Límite localStorage: (~5MB por sitio)                        │
+│                                                                  │
+│ Solución:                                                        │
+│ Abre en ventana normal (no incógnito)                           │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ BUILD FALLA ────────────────────────────────────────────────────┐
+│ Error: "error during build..."                                  │
+│                                                                  │
+│ Ver error completo:                                              │
+│ npm run build 2>&1                                              │
+│                                                                  │
+│ Causas comunes:                                                  │
+│ 1. Syntax error en archivo .js/jsx                              │
+│ 2. Importación incorrecta                                        │
+│ 3. Dependencia faltante                                          │
+│                                                                  │
+│ Revisar: src/ carpeta                                            │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════
+
+✅ CHECKLIST ANTES DE USAR
+
+[ ] Node.js 18+ instalado
+[ ] npm versión 9+
+[ ] npm cache limpió
+[ ] npm install completó sin errores (rojo)
+[ ] node_modules carpeta existe
+[ ] npm audit sin críticos
+[ ] npm run dev corre sin errores
+[ ] http://localhost:5173 accesible
+[ ] Login funciona
+[ ] Dashboard carga con datos
+[ ] F12 Console sin errores rojos
+[ ] localStorage funciona
+
+═══════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTACIÓN RELACIONADA
+
+START_SAFE.md         ← Empezar aquí (4 min)
+TESTING_GUIDE.md      ← Guía completa (30 min)
+QUICK_START.md        ← Para asesores (5 min)
+PRESENTATION_GUIDE.md ← Para presentar (5 min)
+INDEX.md              ← Navegación todos docs (10 min)
+
+═══════════════════════════════════════════════════════════════════════
+
+🎯 COMANDOS IMPORTANTES
+
+npm install              Instalar dependencias
+npm run dev              Ejecutar desarrollo (RECOMENDADO)
+npm run build            Generar build producción
+npm run preview          Probar build
+npm audit                Verificar vulnerabilidades
+npm audit fix            Corregir vulnerabilidades automáticas
+npm cache clean --force  Limpiar cache
+
+═══════════════════════════════════════════════════════════════════════
+
+⚡ NEXT STEPS
+
+1. Lee: START_SAFE.md (3 min)
+2. Ejecuta: npm run dev
+3. Abre: http://localhost:5173/admin/login
+4. Ingresa credenciales
+5. Disfruta FinIA Admin!
+
+═══════════════════════════════════════════════════════════════════════
+
+🔒 SEGURIDAD GARANTIZADA
+
+✅ Todo corre en localhost (no expuesto internet)
+✅ Datos se guardan en localStorage (tu navegador)
+✅ npm audit verifica vulnerabilidades
+✅ Build optimizado para producción
+✅ No hay credenciales reales en código
+✅ SEGURO para testing y presentación
+
+═══════════════════════════════════════════════════════════════════════
+
+Construido por: Copilot CLI + Claude Haiku 4.5
+Repositorio: github.com/DiegoxorG/HACKATON-VERSION-2
