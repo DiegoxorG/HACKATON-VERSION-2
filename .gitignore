@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-server/node_modules/
 
 # Build outputs
 dist/
@@ -11,7 +10,12 @@ build/
 .env
 .env.local
 .env.*.local
-server/.env
+backend/.env
+
+# Python
+backend/__pycache__/
+backend/.pytest_cache/
+.venv/
 
 # Logs
 npm-debug.log*

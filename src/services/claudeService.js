@@ -1,4 +1,4 @@
-const BACKEND = 'http://localhost:3001'
+const BACKEND = 'http://localhost:8000'
 
 export const askClaude = async (systemPrompt, userMessage, history = []) => {
   const res = await fetch(`${BACKEND}/api/claude`, {

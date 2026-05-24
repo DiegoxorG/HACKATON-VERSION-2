@@ -2,6 +2,7 @@ import { Loader2, MessageSquare, MoreVertical, Send } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import AppShell from '../components/AppShell'
 import { useApp } from '../context/AppContext'
+import { serfinanzaKnowledge } from '../data/serfinanzaKnowledge'
 import { askClaude } from '../services/claudeService'
 import { buildClientSummary } from '../utils/finance'
 
@@ -14,7 +15,19 @@ export default function AIAdvisor() {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const [sessions, setSessions] = useState(JSON.parse(localStorage.getItem(KEY) || '[]'))
-  const systemPrompt = useMemo(() => `Eres FinConfia, un asesor financiero empatetico experto en finanzas personales colombianas. Hablas en espanol colombiano y terminas con una pregunta de seguimiento.\n\nPerfil del cliente:\n${buildClientSummary(user)}`,[user])
+  const systemPrompt = useMemo(() => `Eres FinConfia, un asesor financiero empatetico experto en finanzas personales colombianas. Hablas en espanol colombiano y terminas con una pregunta de seguimiento.
+
+Perfil del cliente:
+${buildClientSummary(user)}
+
+=== BASE DE CONOCIMIENTO BANCO SERFINANZA ===
+${serfinanzaKnowledge}
+
+Cuando el cliente pregunte sobre productos, procesos o canales de Serfinanza,
+usa SIEMPRE esta base de conocimiento para dar respuestas precisas y actualizadas.
+Si la pregunta es sobre un producto específico, menciona tasas, requisitos y 
+canales concretos. Si no sabes algo, di que puede contactar al 01 8000 123 456.
+`, [user])
 
   useEffect(() => {
     if (!user) return
