@@ -5,6 +5,7 @@ import AdminShell from '../components/AdminShell'
 import { useAdmin } from '../context/AdminContext'
 import { serfinanzaProducts } from '../data/serfinanzaProducts'
 import { askClaude } from '../services/claudeService'
+import { analyzeHabits } from '../services/habitsService'
 import { buildClientSummary, buildPortfolioSummary } from '../utils/adminFinance'
 
 const CHATS_KEY = 'finia_admin_chats'
@@ -26,11 +27,40 @@ export default function AIAnalyst() {
   const [loading, setLoading] = useState(false)
   const [scope] = useState(clientId ? 'client' : 'portfolio')
   const [chats, setChats] = useState([])
+  const [habitContext, setHabitContext] = useState('')
 
   useEffect(() => {
     const saved = localStorage.getItem(CHATS_KEY)
     if (saved) setChats(JSON.parse(saved))
   }, [])
+
+  useEffect(() => {
+    const loadHabits = async () => {
+      if (!selectedClient) {
+        setHabitContext('Sin cliente en foco para analisis de habitos.')
+        return
+      }
+      try {
+        const habits = await analyzeHabits({
+          income: Number(selectedClient.income || 0),
+          monthlyExpenses: Number(selectedClient.expenses || 0),
+          credits: Number(selectedClient.credits?.length || 0),
+          age: Number(selectedClient.age || 0),
+          city: selectedClient.city || '',
+          occupation: selectedClient.occupation || ''
+        })
+        setHabitContext(
+          `Perfil financiero: ${habits.financial_habit_profile}. ` +
+          `Perfil de gasto: ${habits.spending_habit_profile}. ` +
+          `Conclusion: ${habits.financial_habit_conclusion}. ` +
+          `Recomendaciones base: ${(habits.recommendations || []).join(' | ')}`
+        )
+      } catch {
+        setHabitContext('No fue posible calcular habitos para este cliente.')
+      }
+    }
+    loadHabits()
+  }, [selectedClient])
 
   const systemPrompt = `Eres FinIA Analyst, un asistente de inteligencia financiera disenado para asesores bancarios de Serfinanza Colombia.
 
@@ -46,6 +76,9 @@ ${buildPortfolioSummary(clients)}
 
 ${selectedClient ? `CLIENTE EN FOCO:
 ${buildClientSummary(selectedClient)}` : ''}
+
+${selectedClient ? `ANALISIS DE HABITOS DEL CLIENTE:
+${habitContext}` : ''}
 
 CATALOGO DE PRODUCTOS SERFINANZA:
 ${productCatalogText}

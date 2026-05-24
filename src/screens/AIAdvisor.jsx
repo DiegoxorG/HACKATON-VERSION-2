@@ -11,6 +11,7 @@ import { serfinanzaKnowledge } from '../data/serfinanzaKnowledge'
 import { serfinanzaProducts } from '../data/serfinanzaProducts'
 import { addExpense, deleteExpense, dismissCategory, getCurrentMonth, getDismissed, getTotalByCategory, getTotalByMonth } from '../services/expenseService'
 import { askClaude } from '../services/claudeService'
+import { analyzeHabits } from '../services/habitsService'
 import { buildMemoryContext, buildTimeContext, deleteMemory, getPendingMemories, resolveMemory, saveMemory, updateLastSeen } from '../services/memoryService'
 import { buildClientSummary } from '../utils/finance'
 import { getProductRecommendationPrompt } from '../utils/productRecommender'
@@ -79,7 +80,7 @@ const buildExpenseSummary = (userId) => {
   return `Gastos registrados este mes: $${total.toLocaleString('es-CO')}\nDesglose:\n${lines}`
 }
 
-const buildFullSystemPrompt = (user) => {
+const buildFullSystemPrompt = (user, habitsContext) => {
   const proactive = buildProactiveContext(user)
   return `
 Eres FinConfia, un asesor financiero empatico y experto en finanzas personales colombianas. Hablas en espanol colombiano, de forma calida y clara.
@@ -102,6 +103,9 @@ TOTAL REGISTRADO: ${proactive.totalRegistered} de ${proactive.income} de ingreso
 
 PRODUCTOS RECOMENDADOS PARA ESTE CLIENTE:
 ${getProductRecommendationPrompt(user)}
+
+PERFIL DE HABITOS FINANCIEROS:
+${habitsContext || 'Sin perfil de habitos disponible.'}
 
 BASE DE CONOCIMIENTO BANCO SERFINANZA:
 ${serfinanzaKnowledge}
@@ -203,7 +207,38 @@ export default function AIAdvisor() {
   const [loading, setLoading] = useState(false)
   const [sessions, setSessions] = useState(JSON.parse(localStorage.getItem(KEY) || '[]'))
   const [openAddExpense, setOpenAddExpense] = useState(false)
+  const [habitsContext, setHabitsContext] = useState('')
   const chips = useMemo(() => (user ? getDynamicChips(user) : []), [user, messages.length])
+
+  useEffect(() => {
+    const loadHabits = async () => {
+      if (!user) return
+      try {
+        const month = getCurrentMonth()
+        const monthlyExpenses = getTotalByMonth(user.id, month)
+        const habits = await analyzeHabits({
+          income: Number(user.income || 0),
+          fixedExpenses: Number(user.fixedExpenses || 0),
+          variableExpenses: Number(user.variableExpenses || 0),
+          monthlyExpenses: Number(monthlyExpenses || 0),
+          credits: Number(user.credits || 0),
+          age: Number(user.age || 0),
+          city: user.city || '',
+          occupation: user.occupation || ''
+        })
+        const text = `
+- Perfil financiero: ${habits.financial_habit_profile}
+- Perfil de gasto: ${habits.spending_habit_profile}
+- Conclusion: ${habits.financial_habit_conclusion}
+- Recomendaciones base: ${(habits.recommendations || []).join(' | ')}
+`.trim()
+        setHabitsContext(text)
+      } catch {
+        setHabitsContext('No se pudo calcular el perfil de habitos en este momento.')
+      }
+    }
+    loadHabits()
+  }, [user])
 
   useEffect(() => {
     if (!user || messages.length) return
@@ -276,7 +311,7 @@ export default function AIAdvisor() {
 
     try {
       updateLastSeen(user.id)
-      const systemPrompt = buildFullSystemPrompt(user)
+      const systemPrompt = buildFullSystemPrompt(user, habitsContext)
       const reply = await askClaude(systemPrompt, text, next.map((m) => ({ role: m.role, content: m.content })))
       const parsed = parseAIResponse(reply, user)
 
