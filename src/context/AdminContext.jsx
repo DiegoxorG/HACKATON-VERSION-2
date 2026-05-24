@@ -1,11 +1,12 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { mockClients } from '../data/mockClients'
+import { getIntegratedClients } from '../services/accountsService'
 
 const AdminContext = createContext(null)
 
 export const AdminProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null)
-  const [clients] = useState(mockClients)
+  const [tick, setTick] = useState(0)
   const [filters, setFilters] = useState({
     search: '',
     riskLevel: 'all',
@@ -14,6 +15,11 @@ export const AdminProvider = ({ children }) => {
     tags: 'all',
     sortBy: 'health' // health | mora | name | lastContact
   })
+
+  const clients = useMemo(() => {
+    const integrated = getIntegratedClients()
+    return integrated.length > 0 ? integrated : mockClients
+  }, [tick])
 
   const filteredClients = useMemo(() => {
     let result = [...clients]
@@ -69,6 +75,7 @@ export const AdminProvider = ({ children }) => {
     filteredClients,
     filters,
     setFilters,
+    refreshClients: () => setTick((n) => n + 1),
     getClientById: (id) => clients.find(c => c.id === id)
   }), [admin, clients, filteredClients, filters])
 

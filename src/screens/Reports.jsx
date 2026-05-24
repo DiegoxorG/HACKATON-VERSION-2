@@ -1,115 +1,117 @@
-import { Loader2, FileText, Download } from 'lucide-react'
+import { Download, FileText, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import AdminShell from '../components/AdminShell'
 import { useAdmin } from '../context/AdminContext'
-import { buildPortfolioSummary } from '../utils/adminFinance'
+import { askClaude } from '../services/claudeService'
+import { buildClientSummary, buildPortfolioSummary } from '../utils/adminFinance'
 
 const reportTypes = [
-  { id: 'executive', label: 'Resumen ejecutivo del portafolio', icon: '📊' },
-  { id: 'critical', label: 'Clientes en riesgo crítico', icon: '🚨' },
-  { id: 'segment', label: 'Análisis por segmento', icon: '📈' },
-  { id: 'forecast', label: 'Proyección de mora', icon: '🔮' }
+  { id: 'executive', label: 'Resumen ejecutivo del portafolio', icon: 'R1' },
+  { id: 'critical', label: 'Clientes en riesgo critico', icon: 'R2' },
+  { id: 'segment', label: 'Analisis por segmento', icon: 'R3' },
+  { id: 'forecast', label: 'Proyeccion de mora', icon: 'R4' }
 ]
+
+const parseClaudeJson = (raw) => {
+  if (!raw || typeof raw !== 'string') throw new Error('Respuesta vacia del modelo')
+  try {
+    return JSON.parse(raw)
+  } catch {
+    const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+    if (fenced?.[1]) return JSON.parse(fenced[1])
+    const start = raw.indexOf('{')
+    const end = raw.lastIndexOf('}')
+    if (start !== -1 && end !== -1 && end > start) {
+      return JSON.parse(raw.slice(start, end + 1))
+    }
+    throw new Error('No se pudo extraer JSON del reporte')
+  }
+}
+
+const getTypeLabel = (type) => reportTypes.find((r) => r.id === type)?.label || type
 
 export default function Reports() {
   const { clients } = useAdmin()
+  const [scope, setScope] = useState('portfolio')
+  const [selectedClientId, setSelectedClientId] = useState('')
   const [selectedReport, setSelectedReport] = useState(null)
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState(null)
+  const [error, setError] = useState('')
   const [savedReports, setSavedReports] = useState(
-    JSON.parse(localStorage.getItem('finia_reports') || '[]')
+    JSON.parse(localStorage.getItem('finia_reports') || '[]').filter((r) => r?.source === 'ia')
   )
 
   const generateReport = async () => {
-    setLoading(true)
-    await new Promise(r => setTimeout(r, 1000))
-
-    let reportData = {}
-
-    if (selectedReport === 'executive') {
-      const avgHealth = (clients.reduce((s, c) => s + c.financialHealth, 0) / clients.length).toFixed(1)
-      const avgMora = (clients.reduce((s, c) => s + c.moraProbability, 0) / clients.length * 100).toFixed(1)
-      reportData = {
-        titulo: `Reporte Ejecutivo del Portafolio — ${new Date().toLocaleDateString('es-CO')}`,
-        resumen: `El portafolio de Serfinanza consta de ${clients.length} clientes con salud financiera promedio de ${avgHealth}/100. La probabilidad de mora agregada es ${avgMora}%. Se identifica concentración en clientes de ocupaciones informales y riesgo geográfico en Barranquilla.`,
-        hallazgos_clave: [
-          `Distribución de riesgo: ${clients.filter(c => c.riskLevel === 'bajo').length} bajo, ${clients.filter(c => c.riskLevel === 'moderado').length} moderado, ${clients.filter(c => c.riskLevel === 'alto').length} alto, ${clients.filter(c => c.riskLevel === 'critico').length} crítico`,
-          `${clients.filter(c => c.alerts.length > 0).length} clientes con alertas activas`,
-          `${clients.filter(c => c.paymentHistory !== 'al_dia').length} clientes con atrasos o no pagos`,
-          'Ingresos concentrados en ocupaciones variables (independientes, informales)'
-        ],
-        recomendaciones: [
-          'Intensificar seguimiento a clientes con riesgo alto y crítico',
-          'Implementar programa de educación financiera para independientes',
-          'Diversificar portafolio geográficamente',
-          'Evaluar reestructuraciones preventivas para clientes moderados'
-        ],
-        proyeccion: 'Tendencia estable con riesgo de deterioro si no se interviene en clientes moderados. Enfoque en prevención generará mejora en 6 meses.'
-      }
-    } else if (selectedReport === 'critical') {
-      const critical = clients.filter(c => c.riskLevel === 'critico')
-      reportData = {
-        titulo: `Clientes en Riesgo Crítico — ${new Date().toLocaleDateString('es-CO')}`,
-        resumen: `${critical.length} clientes requieren intervención inmediata. Riesgo de recobro judicial o pérdida total es significativo.`,
-        hallazgos_clave: critical.map(c => `${c.name}: ${(c.moraProbability * 100).toFixed(0)}% mora, ${c.paymentHistory}, última contacto hace ${Math.floor((new Date() - new Date(c.lastContact)) / (1000 * 60 * 60 * 24))} días`),
-        recomendaciones: [
-          'Contacto telefónico INMEDIATO con todos',
-          'Solicitar garantías adicionales o refinanciamiento',
-          'Considerar escalación legal si no hay respuesta en 5 días',
-          'Evaluar reservas para pérdida esperada'
-        ],
-        proyeccion: 'Sin intervención, se proyecta pérdida del 60-80% de estos créditos. Con acción inmediata, posible recuperación del 30-40%.'
-      }
-    } else if (selectedReport === 'segment') {
-      reportData = {
-        titulo: `Análisis por Segmento — ${new Date().toLocaleDateString('es-CO')}`,
-        resumen: 'Segmentación de portafolio por ocupación y riesgo.',
-        hallazgos_clave: [
-          'Independientes/Informales: 9 clientes, 55% en riesgo moderado o superior',
-          'Profesionales: 5 clientes, 80% en riesgo bajo',
-          'Ocupación no especificada: 4 clientes, mezcla de riesgos',
-          'Barranquilla: 12 clientes (67% del portafolio)'
-        ],
-        recomendaciones: [
-          'Crear sub-portafolios por ocupación con estrategias diferenciadas',
-          'Productos especializados para informales (montos menores, plazos flexibles)',
-          'Georeplicar modelo exitoso en otras ciudades'
-        ],
-        proyeccion: 'Segmentación estratégica puede mejorar eficiencia crediticia 15-20% en 12 meses.'
-      }
-    } else if (selectedReport === 'forecast') {
-      const inMora = clients.filter(c => c.paymentHistory !== 'al_dia').length
-      const avgHighRisk = clients.filter(c => c.riskLevel === 'alto').reduce((s, c) => s + c.moraProbability, 0) / Math.max(1, clients.filter(c => c.riskLevel === 'alto').length)
-      reportData = {
-        titulo: `Proyección de Mora — Próximos 6 Meses`,
-        resumen: `Actualmente ${inMora} clientes en mora. Proyección: posible incremento a ${Math.round(inMora * 1.3)} si no hay intervención.`,
-        hallazgos_clave: [
-          `Mora actual: ${((inMora / clients.length) * 100).toFixed(1)}%`,
-          `Probabilidad de mora promedio: ${(clients.reduce((s, c) => s + c.moraProbability, 0) / clients.length * 100).toFixed(1)}%`,
-          'Riesgo de aumento concentrado en ocupaciones informales',
-          'Estacionalidad esperada en meses de baja actividad comercial'
-        ],
-        recomendaciones: [
-          'Refuerzo de seguimiento preventivo ahora',
-          'Preparar alternativas de refinanciamiento',
-          'Aumentar provisiones en Q3'
-        ],
-        proyeccion: 'Con acción preventiva: mora estable. Sin intervención: incremento 30-40% en 6 meses.'
-      }
+    if (!selectedReport) return
+    if (scope === 'client' && !selectedClientId) {
+      setError('Selecciona un cliente para generar reporte individual.')
+      return
     }
+    setLoading(true)
+    setError('')
 
-    setReport(reportData)
+    try {
+      const system = 'Eres analista senior de riesgo y portafolio para Serfinanza Colombia. Responde SOLO con JSON valido y sin texto adicional: {"titulo":"...","resumen":"...","hallazgos_clave":["..."],"recomendaciones":["..."],"proyeccion":"..."}'
+      const selectedClient = clients.find((c) => c.id === selectedClientId)
+      const scopeText = scope === 'client'
+        ? `Contexto de cliente individual:\n${buildClientSummary(selectedClient)}`
+        : `Resumen de portafolio:\n${buildPortfolioSummary(clients)}`
+      const userPrompt = `
+Tipo de reporte solicitado: ${getTypeLabel(selectedReport)} (${selectedReport})
+Alcance del reporte: ${scope === 'client' ? 'cliente individual' : 'portafolio'}
+Fecha actual: ${new Date().toLocaleString('es-CO')}
 
-    // Guardar
-    const saved = { ...reportData, id: Date.now(), type: selectedReport, generatedAt: new Date().toISOString() }
-    const updated = [saved, ...savedReports].slice(0, 5)
-    setSavedReports(updated)
-    localStorage.setItem('finia_reports', JSON.stringify(updated))
+${scopeText}
 
-    setLoading(false)
+Instrucciones:
+- El reporte debe ser ejecutivo, accionable y concreto.
+- Incluye de 3 a 6 hallazgos_clave.
+- Incluye de 3 a 6 recomendaciones.
+- En recomendaciones sugiere ofertas/productos del banco cuando aplique.
+- No inventes clientes ni cifras fuera del contexto entregado.
+- Si el alcance es cliente individual, personaliza recomendaciones para ese cliente y evita hablar del portafolio completo.
+`.trim()
+
+      const raw = await askClaude(system, userPrompt)
+      const parsed = parseClaudeJson(raw)
+
+      const reportData = {
+        titulo: parsed.titulo || `Reporte ${getTypeLabel(selectedReport)} - ${scope === 'client' ? (selectedClient?.name || 'Cliente') : 'Portafolio'} - ${new Date().toLocaleDateString('es-CO')}`,
+        resumen: parsed.resumen || 'Sin resumen disponible',
+        hallazgos_clave: Array.isArray(parsed.hallazgos_clave) ? parsed.hallazgos_clave : ['Sin hallazgos disponibles'],
+        recomendaciones: Array.isArray(parsed.recomendaciones) ? parsed.recomendaciones : ['Sin recomendaciones disponibles'],
+        proyeccion: parsed.proyeccion || 'Sin proyeccion disponible',
+        type: selectedReport,
+        scope,
+        clientId: selectedClientId || null
+      }
+
+      setReport(reportData)
+
+      const saved = { ...reportData, id: Date.now(), generatedAt: new Date().toISOString(), source: 'ia' }
+      const updated = [saved, ...savedReports].slice(0, 5)
+      setSavedReports(updated)
+      localStorage.setItem('finia_reports', JSON.stringify(updated))
+    } catch (err) {
+      const msg = err?.message || ''
+      setError(
+        msg.includes('401')
+          ? 'La API key no es valida para generar reportes.'
+          : msg.includes('429')
+          ? 'Hay muchas solicitudes seguidas. Intenta en 1 minuto.'
+          : msg.includes('fetch')
+          ? 'No se pudo conectar al backend. Verifica que este corriendo en http://localhost:8000.'
+          : 'No pudimos generar el reporte con IA en este intento.'
+      )
+      setReport(null)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const downloadPDF = () => {
+  const downloadReport = () => {
+    if (!report) return
     const content = `
 ${report.titulo}
 
@@ -121,7 +123,7 @@ ${report.hallazgos_clave.map((h, i) => `${i + 1}. ${h}`).join('\n')}
 RECOMENDACIONES:
 ${report.recomendaciones.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 
-PROYECCIÓN:
+PROYECCION:
 ${report.proyeccion}
 
 Generado: ${new Date().toLocaleString('es-CO')}
@@ -131,7 +133,7 @@ Generado: ${new Date().toLocaleString('es-CO')}
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `reporte_${report.type}_${Date.now()}.txt`
+    a.download = `reporte_${report.type || 'admin'}_${Date.now()}.txt`
     a.click()
   }
 
@@ -140,8 +142,57 @@ Generado: ${new Date().toLocaleString('es-CO')}
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-white">Reportes</h1>
-          <p className="text-[#94a3b8]">Genera reportes ejecutivos con análisis de IA</p>
+          <p className="text-[#94a3b8]">Genera reportes ejecutivos con analisis de IA</p>
         </div>
+
+        <div className="bg-[#1e293b] border border-[#334155] rounded-lg p-4 space-y-3">
+          <div className="grid md:grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                setScope('portfolio')
+                setReport(null)
+                setError('')
+              }}
+              className={`px-4 py-2 rounded-lg border text-sm transition ${scope === 'portfolio' ? 'bg-[#1a56db] border-[#1a56db] text-white' : 'border-[#334155] text-[#94a3b8] hover:border-[#1a56db]'}`}
+            >
+              Reporte de Portafolio
+            </button>
+            <button
+              onClick={() => {
+                setScope('client')
+                setReport(null)
+                setError('')
+              }}
+              className={`px-4 py-2 rounded-lg border text-sm transition ${scope === 'client' ? 'bg-[#1a56db] border-[#1a56db] text-white' : 'border-[#334155] text-[#94a3b8] hover:border-[#1a56db]'}`}
+            >
+              Reporte por Cliente
+            </button>
+          </div>
+          {scope === 'client' && (
+            <select
+              value={selectedClientId}
+              onChange={(e) => {
+                setSelectedClientId(e.target.value)
+                setReport(null)
+                setError('')
+              }}
+              className="w-full bg-[#0f172a] border border-[#334155] rounded-lg px-3 py-2 text-[#f1f5f9] text-sm focus:outline-none focus:ring-1 focus:ring-[#1a56db]"
+            >
+              <option value="">Selecciona un cliente</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.id})
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-4">
           {reportTypes.map((type) => (
@@ -150,6 +201,7 @@ Generado: ${new Date().toLocaleString('es-CO')}
               onClick={() => {
                 setSelectedReport(type.id)
                 setReport(null)
+                setError('')
               }}
               className={`p-6 rounded-lg border-2 transition text-left ${
                 selectedReport === type.id
@@ -195,7 +247,7 @@ Generado: ${new Date().toLocaleString('es-CO')}
                   Regenerar
                 </button>
                 <button
-                  onClick={downloadPDF}
+                  onClick={downloadReport}
                   className="px-4 py-2 border border-[#334155] text-[#94a3b8] rounded-lg hover:border-[#0e9f6e] transition flex items-center gap-2 text-sm"
                 >
                   <Download size={14} />
@@ -235,7 +287,7 @@ Generado: ${new Date().toLocaleString('es-CO')}
               </div>
 
               <div className="bg-[#0f172a] border border-[#334155] rounded-lg p-4">
-                <h3 className="font-semibold text-white mb-2">Proyección</h3>
+                <h3 className="font-semibold text-white mb-2">Proyeccion</h3>
                 <p className="text-[#e0e7ff]">{report.proyeccion}</p>
               </div>
             </div>
@@ -249,7 +301,10 @@ Generado: ${new Date().toLocaleString('es-CO')}
               {savedReports.map((r) => (
                 <button
                   key={r.id}
-                  onClick={() => setReport(r)}
+                  onClick={() => {
+                    setReport(r)
+                    setError('')
+                  }}
                   className="w-full text-left p-3 bg-[#0f172a] border border-[#334155] rounded-lg hover:border-[#1a56db] transition"
                 >
                   <p className="text-white font-medium text-sm">{r.titulo}</p>

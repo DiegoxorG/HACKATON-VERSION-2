@@ -5,6 +5,7 @@ import AuthLayout from '../components/AuthLayout'
 import Logo from '../components/Logo'
 import { useApp } from '../context/AppContext'
 import { mockUser } from '../data/mockUser'
+import { ensureUserExists } from '../services/accountsService'
 import { login } from '../services/authService'
 
 export default function Login() {
@@ -32,6 +33,7 @@ export default function Login() {
   }
 
   const quickDemo = () => {
+    ensureUserExists(mockUser)
     localStorage.setItem('finconfia_session', JSON.stringify(mockUser))
     setUser(mockUser)
     navigate('/dashboard')

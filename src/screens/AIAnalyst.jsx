@@ -3,37 +3,43 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import AdminShell from '../components/AdminShell'
 import { useAdmin } from '../context/AdminContext'
+import { serfinanzaProducts } from '../data/serfinanzaProducts'
+import { askClaude } from '../services/claudeService'
 import { buildClientSummary, buildPortfolioSummary } from '../utils/adminFinance'
 
 const CHATS_KEY = 'finia_admin_chats'
+const productCatalogText = serfinanzaProducts.map((p) => {
+  const requisitos = (p.requisitos || []).join('; ')
+  const idealFor = (p.idealFor || []).join(', ')
+  return `- ${p.name} (${p.category}) | cupo: ${p.cupo} | tasa: ${p.tasa} | minIncome: ${p.minIncome ?? 'N/A'} | ideal para: ${idealFor} | requisitos: ${requisitos}`
+}).join('\n')
 
 export default function AIAnalyst() {
   const [searchParams] = useSearchParams()
   const { clients, getClientById } = useAdmin()
-  
+
   const clientId = searchParams.get('client')
   const selectedClient = clientId ? getClientById(clientId) : null
 
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [scope, setScope] = useState(clientId ? 'client' : 'portfolio')
+  const [scope] = useState(clientId ? 'client' : 'portfolio')
   const [chats, setChats] = useState([])
 
-  // Cargar chats guardados
   useEffect(() => {
     const saved = localStorage.getItem(CHATS_KEY)
     if (saved) setChats(JSON.parse(saved))
   }, [])
 
-  const systemPrompt = `Eres FinIA Analyst, un asistente de inteligencia financiera diseñado para asesores bancarios de Serfinanza Colombia.
+  const systemPrompt = `Eres FinIA Analyst, un asistente de inteligencia financiera disenado para asesores bancarios de Serfinanza Colombia.
 
 Tu rol es ayudar al asesor a:
 1. Entender el estado financiero de sus clientes
 2. Identificar clientes en riesgo antes de que entren en mora
-3. Priorizar acciones: a quién llamar, qué producto ofrecer, cómo abordar una conversación
+3. Priorizar acciones: a quien llamar, que producto ofrecer, como abordar una conversacion
 4. Detectar patrones en el portafolio
-5. Generar argumentos sólidos para presentar a clientes o superiores
+5. Generar argumentos solidos para presentar a clientes o superiores
 
 CONTEXTO DEL PORTAFOLIO:
 ${buildPortfolioSummary(clients)}
@@ -41,19 +47,27 @@ ${buildPortfolioSummary(clients)}
 ${selectedClient ? `CLIENTE EN FOCO:
 ${buildClientSummary(selectedClient)}` : ''}
 
+CATALOGO DE PRODUCTOS SERFINANZA:
+${productCatalogText}
+
 REGLAS:
-- Sé directo y ejecutivo. El asesor no tiene tiempo.
-- Usa términos financieros pero explica cuando sea necesario.
+- Se directo y ejecutivo. El asesor no tiene tiempo.
+- Usa terminos financieros pero explica cuando sea necesario.
 - Si detectas algo urgente, dilo primero.
-- Propón acciones concretas: "Llama a X porque Y. Sugiere Z."
-- No inventes datos que no estén en el contexto.
-- Responde siempre en español colombiano profesional.`
+- Propon acciones concretas: "Llama a X porque Y. Sugiere Z."
+- No inventes datos que no esten en el contexto.
+- Cuando recomiendes productos, menciona solo productos del catalogo anterior.
+- Si preguntan "que vender" o "que ofrecer", devuelve 2-3 productos con:
+  1) Nombre exacto del producto
+  2) Por que aplica al cliente
+  3) Requisito clave a validar (ingreso, historial, etc.)
+- Responde siempre en espanol colombiano profesional.`
 
   const quickQuestions = [
-    "¿Quiénes tienen mayor riesgo de mora este mes?",
-    "¿Qué clientes debo contactar esta semana?",
-    "¿Hay patrones preocupantes en el portafolio?",
-    clientId ? `Resume el estado de ${selectedClient?.name}` : "¿Cuál es el perfil típico de mi portafolio?"
+    'Quienes tienen mayor riesgo de mora este mes?',
+    'Que clientes debo contactar esta semana?',
+    'Hay patrones preocupantes en el portafolio?',
+    clientId ? `Resume el estado de ${selectedClient?.name}` : 'Cual es el perfil tipico de mi portafolio?'
   ]
 
   const sendMessage = async (text = input) => {
@@ -66,29 +80,16 @@ REGLAS:
     setLoading(true)
 
     try {
-      // Simular respuesta IA (en prod usaría claudeService.askClaude)
-      const aiResponses = {
-        mora: `Basándome en el análisis del portafolio, los 3 clientes con mayor riesgo de mora son: CLI-013 (72% probabilidad), CLI-017 (95% probabilidad) y CLI-012 (55% probabilidad). Te recomiendo contactar a CLI-017 de inmediato - está sin ingresos hace 6+ meses y tiene 3 créditos en no pago.`,
-        contacto: `Esta semana deberías contactar: CLI-018 (último contacto hace 6 meses - sin pago), CLI-016 (2 créditos en mora), y CLI-014 (atraso de 2 meses en moto). Prioriza a CLI-018 y CLI-016 por riesgo legal.`,
-        patrones: `Detecto 2 patrones preocupantes: (1) 4 clientes informales/taxistas/vendedores ambulantes con ingresos muy variables - todos en riesgo moderado o alto. (2) Concentración geográfica en Barranquilla (12 de 18 clientes) - considera evaluar impacto económico local. Recomiendo: programa de educación financiera para informales y diversificación geográfica.`,
-        perfil: `Tu portafolio está compuesto por: 5 clientes bajo riesgo (28%), 6 moderado (33%), 5 alto (28%), 2 crítico (11%). Ingresos promedio: $2.8M. Salud promedio: 55/100. Probabilidad mora promedio: 27%. Hay concentración en ocupaciones: docentes, comerciantes, informales. Margen de ganancia bancaria bajo pero manejable con seguimiento activo.`
-      }
-
-      let response = "Procesando tu pregunta..."
-      const textLower = text.toLowerCase()
-      if (textLower.includes('mora') || textLower.includes('riesgo')) response = aiResponses.mora
-      else if (textLower.includes('contacto') || textLower.includes('llamar')) response = aiResponses.contacto
-      else if (textLower.includes('patrón') || textLower.includes('preocup')) response = aiResponses.patrones
-      else if (textLower.includes('perfil') || textLower.includes('típico')) response = aiResponses.perfil
-      else response = `Entendido. Analizando tu pregunta: "${text}". En base al contexto de ${scope === 'portfolio' ? 'tu portafolio completo' : 'este cliente'}, mi recomendación es que analices cuidadosamente el historial de pagos y el flujo de ingresos. ¿Necesitas datos más específicos?`
-
-      await new Promise(r => setTimeout(r, 600))
+      const response = await askClaude(
+        systemPrompt,
+        text,
+        next.map((m) => ({ role: m.role, content: m.content }))
+      )
 
       const aiMsg = { role: 'assistant', content: response, ts: new Date().toISOString() }
       const final = [...next, aiMsg]
       setMessages(final)
 
-      // Guardar chat
       const chat = {
         id: Date.now(),
         createdAt: new Date().toISOString(),
@@ -101,7 +102,14 @@ REGLAS:
       setChats(updated)
       localStorage.setItem(CHATS_KEY, JSON.stringify(updated))
     } catch (err) {
-      setMessages([...next, { role: 'assistant', content: 'Error: No pudimos procesar tu pregunta.', error: true }])
+      const msg = err.message.includes('fetch')
+        ? 'No se pudo conectar con el backend. Verifica que este corriendo en http://localhost:8000.'
+        : err.message.includes('401')
+        ? 'API key invalida o no configurada. Revisa ANTHROPIC_API_KEY en backend/.env.'
+        : err.message.includes('429')
+        ? 'Demasiadas solicitudes. Intenta de nuevo en un momento.'
+        : 'No pudimos procesar tu pregunta en este momento.'
+      setMessages([...next, { role: 'assistant', content: msg, error: true, ts: new Date().toISOString() }])
     } finally {
       setLoading(false)
     }
@@ -110,9 +118,7 @@ REGLAS:
   return (
     <AdminShell>
       <div className="grid lg:grid-cols-[1fr_280px] gap-4 h-[calc(100vh-120px)]">
-        {/* Chat principal */}
         <section className="bg-[#1e293b] rounded-lg overflow-hidden flex flex-col">
-          {/* Header */}
           <div className="p-4 border-b border-[#334155] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1a56db] to-[#0e9f6e] text-white grid place-items-center font-bold">
@@ -120,7 +126,7 @@ REGLAS:
               </div>
               <div>
                 <p className="font-semibold text-white">FinIA Analyst</p>
-                <p className="text-xs text-[#0e9f6e]">En línea</p>
+                <p className="text-xs text-[#0e9f6e]">En linea</p>
               </div>
             </div>
             {selectedClient && (
@@ -130,13 +136,12 @@ REGLAS:
             )}
           </div>
 
-          {/* Mensajes */}
           <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#0f172a]">
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-center">
                 <div>
                   <MessageSquare size={40} className="mx-auto mb-3 text-[#334155]" />
-                  <p className="text-[#94a3b8]">Inicia una conversación</p>
+                  <p className="text-[#94a3b8]">Inicia una conversacion</p>
                   <p className="text-sm text-[#64748b] mt-1">Pregunta sobre clientes, patrones o recomendaciones</p>
                 </div>
               </div>
@@ -166,7 +171,6 @@ REGLAS:
             )}
           </div>
 
-          {/* Sugerencias rápidas */}
           {messages.length === 0 && (
             <div className="p-4 bg-[#1e293b] border-t border-[#334155] overflow-x-auto">
               <div className="flex gap-2 flex-nowrap">
@@ -183,7 +187,6 @@ REGLAS:
             </div>
           )}
 
-          {/* Input */}
           <div className="p-4 bg-[#1e293b] border-t border-[#334155] flex gap-2">
             <input
               type="text"
@@ -203,7 +206,6 @@ REGLAS:
           </div>
         </section>
 
-        {/* Historial de chats */}
         <aside className="bg-[#1e293b] rounded-lg border border-[#334155] overflow-hidden hidden lg:flex flex-col">
           <div className="p-4 border-b border-[#334155] flex items-center justify-between">
             <h3 className="font-semibold text-white text-sm">Historial</h3>

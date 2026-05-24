@@ -2,12 +2,14 @@
 import Logo from '../components/Logo'
 import { mockUser } from '../data/mockUser'
 import { useApp } from '../context/AppContext'
+import { ensureUserExists } from '../services/accountsService'
 
 export default function Splash() {
   const navigate = useNavigate()
   const { setUser } = useApp()
 
   const quickDemo = () => {
+    ensureUserExists(mockUser)
     localStorage.setItem('finconfia_session', JSON.stringify(mockUser))
     setUser(mockUser)
     navigate('/dashboard')
