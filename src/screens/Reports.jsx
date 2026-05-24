@@ -101,7 +101,7 @@ Instrucciones:
           : msg.includes('429')
           ? 'Hay muchas solicitudes seguidas. Intenta en 1 minuto.'
           : msg.includes('fetch')
-          ? 'No se pudo conectar al backend. Verifica que este corriendo en http://localhost:8000.'
+          ? 'No se pudo conectar al backend. Verifica que la URL de API este configurada y el servicio este activo.'
           : 'No pudimos generar el reporte con IA en este intento.'
       )
       setReport(null)

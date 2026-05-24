@@ -136,7 +136,7 @@ REGLAS:
       localStorage.setItem(CHATS_KEY, JSON.stringify(updated))
     } catch (err) {
       const msg = err.message.includes('fetch')
-        ? 'No se pudo conectar con el backend. Verifica que este corriendo en http://localhost:8000.'
+        ? 'No se pudo conectar con el backend. Verifica que la URL de API este configurada y el servicio este activo.'
         : err.message.includes('401')
         ? 'API key invalida o no configurada. Revisa ANTHROPIC_API_KEY en backend/.env.'
         : err.message.includes('429')

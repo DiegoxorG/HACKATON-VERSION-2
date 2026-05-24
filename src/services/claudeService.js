@@ -1,4 +1,4 @@
-﻿const BACKEND = 'http://localhost:8000'
+const BACKEND = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export const askClaude = async (systemPrompt, userMessage, history = []) => {
   const res = await fetch(`${BACKEND}/api/claude`, {
@@ -11,7 +11,7 @@ export const askClaude = async (systemPrompt, userMessage, history = []) => {
     let errMsg = 'No se pudo completar la solicitud.'
     try {
       const err = await res.json()
-      errMsg = err.error || errMsg
+      errMsg = err.error || err.detail || errMsg
     } catch {
       errMsg = `Error HTTP ${res.status}`
     }
@@ -21,4 +21,3 @@ export const askClaude = async (systemPrompt, userMessage, history = []) => {
   const data = await res.json()
   return data.reply
 }
-
