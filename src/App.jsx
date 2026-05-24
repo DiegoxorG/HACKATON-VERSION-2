@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppProvider, useApp } from './context/AppContext'
 import Splash from './screens/Splash'
 import Login from './screens/Login'
@@ -11,6 +11,7 @@ import BankReport from './screens/BankReport'
 import Profile from './screens/Profile'
 import Score from './screens/Score'
 import Products from './screens/Products'
+import Expenses from './screens/Expenses'
 
 const Protected = ({ children }) => {
   const { user } = useApp()
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
+          <Route path="/expenses" element={<Protected><Expenses /></Protected>} />
           <Route path="/advisor" element={<Protected><AIAdvisor /></Protected>} />
           <Route path="/credits" element={<Protected><CreditAnalyzer /></Protected>} />
           <Route path="/products" element={<Protected><Products /></Protected>} />
@@ -38,5 +40,3 @@ export default function App() {
     </AppProvider>
   )
 }
-
-

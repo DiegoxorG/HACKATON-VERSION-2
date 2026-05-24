@@ -1,6 +1,6 @@
-﻿export const mockUser = {
+﻿﻿export const mockUser = {
   id: 9999,
-  name: 'Carlos Martinez',
+  name: 'Carlos Martínez',
   age: 34,
   city: 'Barranquilla',
   occupation: 'Docente',
@@ -16,5 +16,3 @@
   goals: ['Pagar mis deudas', 'Crear un fondo de emergencia'],
   createdAt: new Date().toISOString()
 }
-
-
