@@ -1,9 +1,15 @@
 const BACKEND = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const APP_TOKEN = import.meta.env.VITE_APP_TOKEN || 'dev-token-change-me'
 
+// Cliente HTTP para el endpoint de conversación IA.
+// Usa VITE_API_URL en producción y localhost en desarrollo.
 export const askClaude = async (systemPrompt, userMessage, history = []) => {
   const res = await fetch(`${BACKEND}/api/claude`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-app-token': APP_TOKEN
+    },
     body: JSON.stringify({ systemPrompt, userMessage, history })
   })
 

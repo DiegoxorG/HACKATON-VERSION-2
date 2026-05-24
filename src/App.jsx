@@ -13,6 +13,8 @@ import Score from './screens/Score'
 import Products from './screens/Products'
 import Expenses from './screens/Expenses'
 
+// Wrapper de protección para rutas autenticadas en la app de cliente.
+// Si no hay sesión de usuario activa, redirige al splash/login.
 const Protected = ({ children }) => {
   const { user } = useApp()
   return user ? children : <Navigate to="/" replace />
@@ -20,13 +22,18 @@ const Protected = ({ children }) => {
 
 export default function App() {
   return (
+    // AppProvider centraliza sesión y acciones globales de usuario.
     <AppProvider>
+      {/* Router exclusivo para el flujo de cliente */}
       <BrowserRouter>
         <Routes>
+          {/* Rutas públicas */}
           <Route path="/" element={<Splash />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/welcome" element={<Welcome />} />
+
+          {/* Rutas privadas (requieren usuario autenticado) */}
           <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
           <Route path="/expenses" element={<Protected><Expenses /></Protected>} />
           <Route path="/advisor" element={<Protected><AIAdvisor /></Protected>} />

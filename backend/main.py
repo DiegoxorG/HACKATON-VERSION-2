@@ -1,20 +1,26 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import anthropic
 import os
+import threading
+import time
 from dotenv import load_dotenv
 
+# Carga variables de entorno locales (desarrollo) y de plataforma (deploy).
 load_dotenv()
 
 app = FastAPI(title="FinConfia API")
 
+# Origenes permitidos por defecto para entorno local.
 allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 
+# En producción se pueden agregar dominios por variable CORS_ORIGINS
+# separando por comas.
 extra_origins = os.getenv("CORS_ORIGINS", "").strip()
 if extra_origins:
     allowed_origins.extend([o.strip() for o in extra_origins.split(",") if o.strip()])
@@ -26,7 +32,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Cliente oficial de Anthropic inicializado con API key de entorno.
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+APP_API_TOKEN = os.getenv("APP_API_TOKEN", "dev-token-change-me")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+
+# Rate limit en memoria (simple, por IP).
+_RATE_LIMIT_BUCKETS = {}
+_RATE_LIMIT_LOCK = threading.Lock()
 
 class Message(BaseModel):
     role: str
@@ -55,8 +69,34 @@ class HabitsRequest(BaseModel):
     city: Optional[str] = ""
     occupation: Optional[str] = ""
 
+class AdminLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+def _require_app_token(req: Request):
+    header_token = req.headers.get("x-app-token", "")
+    if not header_token or header_token != APP_API_TOKEN:
+        raise HTTPException(status_code=401, detail="Token de aplicacion invalido")
+
+
+def _enforce_rate_limit(req: Request, route_name: str, max_requests=30, window_seconds=60):
+    # Clave por ruta + IP para limitar abuso básico.
+    ip = req.client.host if req.client else "unknown"
+    key = f"{route_name}:{ip}"
+    now = time.time()
+    with _RATE_LIMIT_LOCK:
+        history = _RATE_LIMIT_BUCKETS.get(key, [])
+        history = [ts for ts in history if now - ts < window_seconds]
+        if len(history) >= max_requests:
+            raise HTTPException(status_code=429, detail="Demasiadas solicitudes")
+        history.append(now)
+        _RATE_LIMIT_BUCKETS[key] = history
+
 
 def analyze_habits(payload: HabitsRequest):
+    # Heurística liviana para perfilar hábitos con datos mínimos del usuario.
+    # Está pensada para ser explicable y usable en prompts IA.
     income = float(payload.income or 0)
     fixed_exp = float(payload.fixedExpenses or 0)
     variable_exp = float(payload.variableExpenses or 0)
@@ -139,8 +179,28 @@ def analyze_habits(payload: HabitsRequest):
     }
 
 
+@app.post("/admin/login")
+def admin_login(payload: AdminLoginRequest, req: Request):
+    _enforce_rate_limit(req, "admin_login", max_requests=10, window_seconds=60)
+    if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+        raise HTTPException(status_code=500, detail="Credenciales admin no configuradas en servidor")
+    if payload.email != ADMIN_EMAIL or payload.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Credenciales invalidas")
+    return {
+        "ok": True,
+        "admin": {
+            "email": payload.email,
+            "role": "admin",
+            "loginTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+    }
+
+
 @app.post("/score/calculate")
-def score_calculate(payload: ScoreRequest):
+def score_calculate(payload: ScoreRequest, req: Request):
+    _require_app_token(req)
+    _enforce_rate_limit(req, "score", max_requests=30, window_seconds=60)
+    # Endpoint de score basado en el modelo de credit_scorer.py
     try:
         from credit_scorer import predict_credit_probability
         return predict_credit_probability(payload.model_dump())
@@ -150,11 +210,15 @@ def score_calculate(payload: ScoreRequest):
 
 @app.get("/health")
 def health():
+    # Endpoint de salud para validar deploy/conectividad.
     return {"status": "ok", "model": "claude-sonnet-4-20250514"}
 
 
 @app.post("/habits/analyze")
-def habits_analyze(payload: HabitsRequest):
+def habits_analyze(payload: HabitsRequest, req: Request):
+    _require_app_token(req)
+    _enforce_rate_limit(req, "habits", max_requests=40, window_seconds=60)
+    # Endpoint para enriquecer contexto de IA con hábitos financieros.
     try:
         return analyze_habits(payload)
     except Exception as e:
@@ -162,7 +226,11 @@ def habits_analyze(payload: HabitsRequest):
 
 
 @app.post("/api/claude")
-def ask_claude(req: ClaudeRequest):
+def ask_claude(req: ClaudeRequest, request: Request):
+    _require_app_token(request)
+    _enforce_rate_limit(request, "claude", max_requests=20, window_seconds=60)
+    # Endpoint principal de conversación IA.
+    # Recibe system prompt, mensaje usuario e historial.
     try:
         messages = [{"role": m.role, "content": m.content} for m in req.history]
         messages.append({"role": "user", "content": req.userMessage})

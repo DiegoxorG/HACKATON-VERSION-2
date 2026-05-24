@@ -9,6 +9,8 @@ import ClientDetail from './screens/ClientDetail'
 import ClientList from './screens/ClientList'
 import Reports from './screens/Reports'
 
+// Guardia de rutas para el panel admin.
+// Requiere que exista sesión admin en estado o localStorage.
 const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate()
   const { admin } = useAdmin()
@@ -26,6 +28,7 @@ const ProtectedRoute = ({ children }) => {
 function AppRoutes() {
   const { admin, setAdmin } = useAdmin()
 
+  // Rehidratación de sesión admin desde localStorage al cargar.
   useEffect(() => {
     const session = localStorage.getItem('finia_admin_session')
     if (session && !admin) {
@@ -91,7 +94,9 @@ function AppRoutes() {
 
 export default function App() {
   return (
+    // Contexto propio del panel administrativo.
     <AdminProvider>
+      {/* Router exclusivo para admin */}
       <BrowserRouter>
         <AppRoutes />
       </BrowserRouter>

@@ -3,7 +3,8 @@ import { useState } from 'react'
 import AppShell from '../components/AppShell'
 import { useApp } from '../context/AppContext'
 
-const API = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
+const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const APP_TOKEN = import.meta.env.VITE_APP_TOKEN || 'dev-token-change-me'
 
 const FEATURE_LABELS = {
   edad: 'Edad',
@@ -41,7 +42,10 @@ export default function Score() {
     try {
       const res = await fetch(`${API}/score/calculate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-app-token': APP_TOKEN
+        },
         body: JSON.stringify(form),
       })
       if (!res.ok) {

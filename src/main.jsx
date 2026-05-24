@@ -4,7 +4,11 @@ import App from './App'
 import AppAdmin from './AppAdmin'
 import './index.css'
 
-// Determinar si es admin o cliente basado en la URL
+// Punto de entrada único del frontend.
+// El proyecto mantiene dos "subapps":
+// - Cliente final (App)
+// - Panel administrativo (AppAdmin)
+// Aquí seleccionamos cuál renderizar según la ruta actual.
 const isAdmin = window.location.pathname.includes('/admin')
 const AppToRender = isAdmin ? AppAdmin : App
 

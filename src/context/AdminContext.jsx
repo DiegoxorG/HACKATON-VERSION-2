@@ -2,6 +2,10 @@ import { createContext, useContext, useMemo, useState } from 'react'
 import { mockClients } from '../data/mockClients'
 import { getIntegratedClients } from '../services/accountsService'
 
+// Contexto del panel admin:
+// - sesion de admin
+// - data de clientes (integrados o mock fallback)
+// - filtros y listado filtrado
 const AdminContext = createContext(null)
 
 export const AdminProvider = ({ children }) => {
@@ -17,6 +21,8 @@ export const AdminProvider = ({ children }) => {
   })
 
   const clients = useMemo(() => {
+    // Si existen usuarios reales registrados, se transforman a clientes admin.
+    // Si no, se usa dataset mock para no romper demo/UX.
     const integrated = getIntegratedClients()
     return integrated.length > 0 ? integrated : mockClients
   }, [tick])
