@@ -1,4 +1,4 @@
-import { BarChart3, Bot, FileText, LayoutDashboard, User } from 'lucide-react'
+import { BarChart3, Bot, FileText, LayoutDashboard, TrendingUp, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import Logo from './Logo'
 
@@ -6,6 +6,7 @@ const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/advisor', label: 'Asesor IA', icon: Bot },
   { to: '/credits', label: 'Creditos', icon: BarChart3 },
+  { to: '/score', label: 'Mi Score ML', icon: TrendingUp },
   { to: '/reports', label: 'Reportes', icon: FileText },
   { to: '/profile', label: 'Perfil', icon: User }
 ]
